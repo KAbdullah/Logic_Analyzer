@@ -25,7 +25,7 @@
 void init_rcc_pll(void) {
   //Turn HSIO clock on
   RCC_CR |= (1 << 0);
-  RCC_PLLCFGR = (RCC_PLLCFGR & ~(0b111111 << 0)) | (16U << 0);
+  RCC_PLLCFGR = (RCC_PLLCFGR & ~(0b111111 << 0)) | (8U << 0);
 
   //Blocking until HSI starts
   while (!(RCC_CR & (1 << 1)));
@@ -41,9 +41,11 @@ void init_rcc_pll(void) {
     }
   }
 
-  //Reset values of PLL register then Set the multiplication factor to 11, 16 * 11 = 176
+  //Reset values of PLL register then Set the multiplication factor to 180, 2 * 90 = 180
   RCC_PLLCFGR &= ~(0b111111111 << 6);
   RCC_PLLCFGR |= (180U << 6);
+
+  RCC_PLLCFGR &= ~(3U << 16);  
 
   //Turn PLL ON
   RCC_CR |= (1 << 24);
