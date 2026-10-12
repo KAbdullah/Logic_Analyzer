@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "../drivers/gpio.c"
 
 #ifndef tim_lib
 #define tim_lib

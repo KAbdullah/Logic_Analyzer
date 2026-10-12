@@ -97,11 +97,12 @@ void init_rcc_pll(void) {
 }
 
 void turn_on_gpioa(void) {
-  //Turn on GPIOB clock
+  //Turn on GPIOA clock
   RCC_AHB1ENR |= (1U << 0);
 }
 
 void turn_on_tim1(void) {
+  //Turn on TIM1 clock
   RCC_APB2ENR |= (1U << 0);
 }
 
