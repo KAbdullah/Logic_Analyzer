@@ -31,11 +31,12 @@ typedef struct tim_struct {
 
 #define TIM1 ((volatile TIM_STRUCT*) 0x40010000)
 
+//Timer will be generate a DMA interrupt every 10MHz, very safe for DMA to accomplish its writes on the RAM
 
 void send_dma_request() {
 
   //Prescaler Register PSC
-  TIM1->PSC = 14;
+  TIM1->PSC = 8;
 
   //Auto-reload Register ARR
   TIM1->ARR = 1;

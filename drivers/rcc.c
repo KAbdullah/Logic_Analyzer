@@ -106,4 +106,8 @@ void turn_on_tim1(void) {
   RCC_APB2ENR |= (1U << 0);
 }
 
+void turn_on_dma2_clock(void) {
+  RCC_AHB1ENR |= (1U << 22);
+}
+
 #endif
