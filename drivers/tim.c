@@ -33,7 +33,7 @@ typedef struct tim_struct {
 
 //Timer will be generate a DMA interrupt every 10MHz, very safe for DMA to accomplish its writes on the RAM
 
-void send_dma_request() {
+void configuration_of_tim1() {
 
   //Prescaler Register PSC
   TIM1->PSC = 8;
@@ -53,9 +53,11 @@ void send_dma_request() {
   //Reinitialized counter register and update registers (brings value from shadow registers)
   TIM1->EGR |= (1U << 0);
 
+}
+
+void start_tim1(void) {
   //Start the timer
   TIM1->CR1 |= (1U << 0);
-
 }
 
 #endif

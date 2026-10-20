@@ -1,5 +1,8 @@
 #include <stdint.h>
 
+#ifndef DEFINE_DMA
+#define DEFINE_DMA
+
 typedef struct  {
   uint32_t LISR;
   uint32_t HISR;
@@ -87,3 +90,5 @@ void turn_on_stream1(volatile DMA_STREAM* dma_stream) {
 
 
 //Interupt: TCIF -> Stream transfer complete 
+
+#endif
