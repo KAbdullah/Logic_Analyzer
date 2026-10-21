@@ -56,8 +56,14 @@ void configuration_of_tim1() {
 }
 
 void start_tim1(void) {
+  configuration_of_tim1();
   //Start the timer
   TIM1->CR1 |= (1U << 0);
+}
+
+void stop_tim1(void) {
+  //Start the timer
+  TIM1->CR1 &= ~(1U << 0);
 }
 
 #endif

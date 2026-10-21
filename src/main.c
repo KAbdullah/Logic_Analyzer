@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "../drivers/delay.c"
 #include "../drivers/rcc.c"
 #include "../drivers/tim.c"
 #include "../drivers/gpio.c"
@@ -15,16 +16,10 @@ int main(void) {
   //This basically initialized the GPIOA to act as input for jump cables attached to it that bring it input voltage
   initialize_gpio(GPIOA_Input_PullUp);
 
-  //This is the timer sending DMA requests at predefined intervals
-  configuration_of_tim1();
-
-  //This is the DMA configuration 
-  dma_stream_configuration(DMASTREAM5);
-  __asm__("nop");
-
-  start_acquisition();
-
   while (1) {
+    start_acquisition();
+
+    stop_acquisition();
 
   }
 }

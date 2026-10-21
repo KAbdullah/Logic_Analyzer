@@ -30,7 +30,15 @@ typedef struct {
 //
 // }
 
-void dma_stream_configuration(volatile DMA_STREAM* dma_stream) {
+void dma_stream_configuration(volatile DMA_STREAM* dma_stream, volatile DMA_REGISTERS* general_dma) {
+
+  if ((dma_stream->SCR & (1 << 0)) != 0) {
+    return;
+  }
+
+  //Clear the DMA complete and half transfer flags
+  general_dma->HIFCR |= (1U << 11);
+  general_dma->HIFCR |= (1U << 10);
 
   //The peripheral address is the GPIOA IDR register
   dma_stream->SPAR = 0x40020010;
@@ -84,8 +92,22 @@ void dma_stream_configuration(volatile DMA_STREAM* dma_stream) {
   dma_stream->SCR &= ~(1U << 23);  
 }
 
-void turn_on_stream1(volatile DMA_STREAM* dma_stream) {
+void turn_on_stream5(volatile DMA_STREAM* dma_stream, volatile DMA_REGISTERS* general_dma) {
+  dma_stream_configuration(dma_stream, general_dma);
+
   dma_stream->SCR |= (1U << 0);
+}
+
+void turn_off_stream5(volatile DMA_STREAM* dma_stream) {
+  dma_stream->SCR &= ~(1U << 0);
+}
+
+int is_dma_enabled(volatile DMA_STREAM* dma_stream) {
+  if (dma_stream->SCR & (1U << 0)) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 
