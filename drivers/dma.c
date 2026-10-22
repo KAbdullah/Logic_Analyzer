@@ -1,28 +1,5 @@
 #include <stdint.h>
-
-#ifndef DEFINE_DMA
-#define DEFINE_DMA
-
-typedef struct  {
-  uint32_t LISR;
-  uint32_t HISR;
-  uint32_t LIFCR;
-  uint32_t HIFCR;
-} DMA_REGISTERS;
-
-typedef struct {
-  uint32_t SCR;
-  uint32_t SNDTR;
-  uint32_t SPAR;
-  uint32_t SM0AR;
-  uint32_t SM1AR;
-  uint32_t SFCR;
-} DMA_STREAM;
-
-#define DMA2ADDRESS 0x40026400
-
-#define DMA2 ((volatile DMA_REGISTERS *) 0x40026400)
-#define DMASTREAM5 ((volatile DMA_STREAM *) (DMA2ADDRESS + 0x010 + (0x18 * 5)))
+#include "dma.h"
 
 //This needs to be on the outside so that we can only call the above function if EN bit is 0
 //If the bit is on if we do (1 << 5) for example, the value would be 32, meaning on, if it's off then it would be 0, therefore no comparator is still necessary
@@ -110,7 +87,4 @@ int is_dma_enabled(volatile DMA_STREAM* dma_stream) {
   }
 }
 
-
 //Interupt: TCIF -> Stream transfer complete 
-
-#endif
