@@ -25,9 +25,7 @@ typedef enum {
 
 static CAPTURE_STATES current_capture_state = IDLE;
 
-static int dma_start_acquisition(void *context) {
-
-  struct StartAndStopConfig* handle = context;
+static int dma_start_acquisition(struct StartAndStopConfig *handle) {
 
   if (current_capture_state == ACQUIRING) {
     return 0;
@@ -49,9 +47,7 @@ static int dma_start_acquisition(void *context) {
 
 }
 
-static int dma_stop_acquisition(void *context) {
-
-  struct StartAndStopConfig* handle = context;
+static int dma_stop_acquisition(struct StartAndStopConfig *handle) {
   
   if (current_capture_state == IDLE) {
     return 0;

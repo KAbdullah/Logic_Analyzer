@@ -15,7 +15,12 @@ typedef enum InputMapping {
 
 void initialize_getting_signals(StartAndStop_API *api);
 
+
 int main(void) {
+
+  __asm__("CPSIE i");
+  //Turn on interrupt for DMA_Stream5
+  *((volatile uint32_t*) 0xE000E108) |= (1U << 4);
 
   init_rcc_pll();
   turn_on_gpioa();

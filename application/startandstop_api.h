@@ -3,12 +3,14 @@
 #ifndef StartAndStop_API_Def
 #define StartAndStop_API_Def
 
+struct StartAndStopConfig;
+
 typedef struct StartAndStop_API {
 
-  void *context; 
+  struct StartAndStopConfig *context;
 
-  int (*start_acquisition) (void *context);
-  int (*stop_acquisition) (void *context);
+  int (*start_acquisition) (struct StartAndStopConfig *context);
+  int (*stop_acquisition) (struct StartAndStopConfig *context);
 
 } StartAndStop_API;
 
