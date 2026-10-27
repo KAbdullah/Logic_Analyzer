@@ -17,9 +17,9 @@ typedef struct {
   uint32_t SFCR;
 } DMA_STREAM;
 
-volatile struct dma_bookkeeper {
+struct dma_bookkeeper {
   uint8_t buffer_wrapping;
-  uint16_t* first_data_pointer;
+  uint8_t* first_data_pointer;
   uint16_t completed_count; 
 };
 
@@ -28,7 +28,7 @@ volatile struct dma_bookkeeper {
 #define DMA2 ((volatile DMA_REGISTERS *) 0x40026400)
 #define DMASTREAM5 ((volatile DMA_STREAM *) (DMA2ADDRESS + 0x010 + (0x18 * 5)))
 
-uint8_t complete_transfer_occured;
+extern int complete_transfer_occured;
 
 void dma_stream_configuration(volatile DMA_STREAM* dma_stream, volatile DMA_REGISTERS* general_dma);
 
@@ -37,5 +37,7 @@ void turn_on_stream5(volatile DMA_STREAM* dma_stream, volatile DMA_REGISTERS* ge
 void turn_off_stream5(volatile DMA_STREAM* dma_stream);
 
 int is_dma_enabled(volatile DMA_STREAM* dma_stream);
+
+void count_samples(volatile DMA_STREAM* dma_stream, volatile struct dma_bookkeeper* book_keeping);
 
 #endif

@@ -2,16 +2,24 @@
 
 #include "../drivers/tim.h"
 #include "../drivers/dma.h"
-#include "startandstop_api.h"
+#include "LogicAnalyser_API.h"
 
-struct StartAndStopConfig {
-  volatile DMA_STREAM* dma_stream;
-  volatile DMA_REGISTERS* general_dma;
+volatile struct dma_bookkeeper BOOK = {
+  .buffer_wrapping = 0,
+  .first_data_pointer = (uint8_t*) 0x2000F800,
+  .completed_count = 0
 };
 
-static struct StartAndStopConfig dma_configuration_2 = {
+struct LogicAnalyserConfig {
+  volatile DMA_STREAM* dma_stream;
+  volatile DMA_REGISTERS* general_dma;
+  volatile struct dma_bookkeeper* dma_bookkeeping;
+};
+
+static struct LogicAnalyserConfig dma_configuration_2 = {
   .dma_stream = DMASTREAM5,
-  .general_dma = DMA2
+  .general_dma = DMA2,
+  .dma_bookkeeping = &BOOK
 };
 
 typedef enum {
@@ -25,7 +33,7 @@ typedef enum {
 
 static CAPTURE_STATES current_capture_state = IDLE;
 
-static int dma_start_acquisition(struct StartAndStopConfig *handle) {
+static int dma_start_acquisition(struct LogicAnalyserConfig *handle) {
 
   if (current_capture_state == ACQUIRING) {
     return 0;
@@ -47,7 +55,7 @@ static int dma_start_acquisition(struct StartAndStopConfig *handle) {
 
 }
 
-static int dma_stop_acquisition(struct StartAndStopConfig *handle) {
+static int dma_stop_acquisition(struct LogicAnalyserConfig *handle) {
   
   if (current_capture_state == IDLE) {
     return 0;
@@ -60,7 +68,7 @@ static int dma_stop_acquisition(struct StartAndStopConfig *handle) {
   }
 
   if (!(is_dma_enabled(handle->dma_stream))) {
-    current_capture_state = IDLE;
+    current_capture_state = CAPTURED;
   } else {
     return 0;
   }
@@ -69,8 +77,18 @@ static int dma_stop_acquisition(struct StartAndStopConfig *handle) {
 
 }
 
-void initialize_getting_signals(StartAndStop_API *api) {
+static volatile struct dma_bookkeeper* dma_bookkeeping(struct LogicAnalyserConfig *handle) {
+  if (current_capture_state == CAPTURED) {
+    count_samples(handle->dma_stream, handle->dma_bookkeeping);
+    current_capture_state = IDLE;
+  }
+
+  return handle->dma_bookkeeping;
+}
+
+void initialize_getting_signals(LogicAnalyser_API *api) {
   api->context = &dma_configuration_2;
   api->start_acquisition = dma_start_acquisition;
   api->stop_acquisition = dma_stop_acquisition;
+  api->bookeeping = dma_bookkeeping;
 }

@@ -17,8 +17,8 @@ add_executable("output.elf")
 target_sources("output.elf" PRIVATE
   startup.c
   src/main.c
-  application/startandstop_adapter.c
-  application/startandstop_wrapper.c
+  application/LogicAnalyser_Adapter.c
+  application/LogicAnalyser_Wrapper.c
   drivers/delay.c
   drivers/dma.c
   drivers/gpio.c

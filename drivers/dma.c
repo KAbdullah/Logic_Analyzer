@@ -90,9 +90,9 @@ int is_dma_enabled(volatile DMA_STREAM* dma_stream) {
   }
 }
 
-//Interupt: TCIF -> Stream transfer complete 
+int complete_transfer_occured = 0;
 
-complete_transfer_occured = 0;
+//Interupt: TCIF -> Stream transfer complete 
 
 void DMA2_Stream5_IRQHandler(void) {
   //If stream 5 has a transfer complete then...
@@ -103,12 +103,14 @@ void DMA2_Stream5_IRQHandler(void) {
     DMA2->HIFCR |= (1U << 11);
 
     //No more interrupts for TCIF
-    DMA2->HISR &= ~(1U << 11);
+    DMASTREAM5->SCR &= ~(1U << 4);
   }
+
+  return;
 }
 
 
-struct dma_bookkeeper* count_samples(volatile DMA_STREAM* dma_stream, volatile struct dma_bookkeeper* book_keeping) {
+void count_samples(volatile DMA_STREAM* dma_stream, volatile struct dma_bookkeeper* book_keeping) {
 
   if (complete_transfer_occured) {
     book_keeping->buffer_wrapping = 1;
@@ -117,8 +119,7 @@ struct dma_bookkeeper* count_samples(volatile DMA_STREAM* dma_stream, volatile s
   book_keeping->completed_count = 65528 - dma_stream->SNDTR;
 
   if (book_keeping->buffer_wrapping > 0) {
-    book_keeping->first_data_pointer = 0x2000F800 + book_keeping->completed_count;
+    book_keeping->first_data_pointer = (uint8_t *)0x2000F800 + book_keeping->completed_count;
   }
-
-  return book_keeping;
+  
 }
