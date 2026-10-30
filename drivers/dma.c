@@ -119,7 +119,7 @@ void count_samples(volatile DMA_STREAM* dma_stream, volatile struct dma_bookkeep
   book_keeping->completed_count = 65528 - dma_stream->SNDTR;
 
   if (book_keeping->buffer_wrapping > 0) {
-    book_keeping->first_data_pointer = (uint8_t *)0x2000F800 + book_keeping->completed_count;
+    book_keeping->dma_data_pointer = (uint8_t *)0x2000F800 + book_keeping->completed_count;
   }
   
 }

@@ -6,7 +6,7 @@
 
 volatile struct dma_bookkeeper BOOK = {
   .buffer_wrapping = 0,
-  .first_data_pointer = (uint8_t*) 0x2000F800,
+  .dma_data_pointer = (uint8_t*) 0x2000F800,
   .completed_count = 0
 };
 
@@ -78,11 +78,7 @@ static int dma_stop_acquisition(struct LogicAnalyserConfig *handle) {
 }
 
 static volatile struct dma_bookkeeper* dma_bookkeeping(struct LogicAnalyserConfig *handle) {
-  if (current_capture_state == CAPTURED) {
-    count_samples(handle->dma_stream, handle->dma_bookkeeping);
-    current_capture_state = IDLE;
-  }
-
+  count_samples(handle->dma_stream, handle->dma_bookkeeping);
   return handle->dma_bookkeeping;
 }
 

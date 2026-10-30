@@ -2,7 +2,7 @@
 #include "tim.h"
 #include "../drivers/gpio.h"
 
-//Timer will be generate a DMA interrupt every 10MHz, very safe for DMA to accomplish its writes on the RAM
+//Timer will be generate a DMA interrupt every 2Hz, very safe for DMA to accomplish its writes on the RAM
 
 void configuration_of_tim1() {
 
@@ -10,7 +10,7 @@ void configuration_of_tim1() {
   TIM1->PSC = 8;
 
   //Auto-reload Register ARR
-  TIM1->ARR = 1;
+  TIM1->ARR = 9;
 
   //Repetition counter Register = 1 RCR
   TIM1->RCR = 0;

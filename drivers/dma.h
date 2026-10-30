@@ -19,7 +19,7 @@ typedef struct {
 
 struct dma_bookkeeper {
   uint8_t buffer_wrapping;
-  uint8_t* first_data_pointer;
+  uint8_t* dma_data_pointer;
   uint16_t completed_count; 
 };
 

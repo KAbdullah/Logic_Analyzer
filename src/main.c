@@ -8,8 +8,8 @@
 #include "../application/LogicAnalyser_API.h"
 
 typedef enum InputMapping {
-  START_ACQUISITION = 0b0001,
-  STOP_ACQUISITION = 0b0010,
+  I2C_START_ACQUISITION = 0b0001,
+  I2C_STOP_ACQUISITION = 0b0010,
   INVALID = 0b1111
 } InputMapping;
 
@@ -40,22 +40,68 @@ int main(void) {
   uint8_t dma_acquisition_stopped = 1;
 
   volatile struct dma_bookkeeper* valid_sample;
+  uint8_t previous_state = 0b00000000;
+  uint8_t* CPU_pointer = (uint8_t *) 0x2000F800;
+  
+  uint16_t maximum_run_length = 0;
+  uint16_t current_run_length = 0;
+  uint16_t number_of_raw_samples = 0;
+  uint16_t number_of_grouped_states = 0;
 
   while (1) {
 
-    if (userInput == START_ACQUISITION && dma_acquisition_stopped) {
+    if (userInput == I2C_START_ACQUISITION && dma_acquisition_stopped) {
       dma_acquisition_started = get_signals(&dma_logic_analyzer_instance);
       if (dma_acquisition_started) {
         dma_acquisition_stopped = 0;
       }
     }
 
-    if (userInput == STOP_ACQUISITION && dma_acquisition_started) {
+    //if (dma_acquisition_started)
+    if (userInput == I2C_STOP_ACQUISITION && dma_acquisition_started) {
       dma_acquisition_stopped = stop_signals(&dma_logic_analyzer_instance);
       if (dma_acquisition_stopped) {
         dma_acquisition_started = 0;
-        valid_sample = valid_samples(&dma_logic_analyzer_instance);
       }
+    }
+
+    //Test taking place
+
+    if (userInput == I2C_STOP_ACQUISITION || userInput == I2C_START_ACQUISITION) {
+      
+      valid_sample = valid_samples(&dma_logic_analyzer_instance);
+
+      if (CPU_pointer < valid_sample->dma_data_pointer) {
+        
+        if (previous_state == *CPU_pointer) {
+          current_run_length++;
+        } else {
+          if (maximum_run_length < current_run_length) {
+            maximum_run_length = current_run_length;
+            current_run_length = 0;
+          }
+          previous_state = *CPU_pointer;
+          number_of_grouped_states++;
+        }
+
+        number_of_raw_samples++;
+
+        CPU_pointer++;
+      }
+
+      // if (valid_sample->buffer_wrapping) {
+      //   for (int i = 0; i < 65528 - valid_sample->completed_count; i++) {
+      //     current_pointer += i;
+
+      //     if (previous_state != *current_pointer) {
+      //       //Send to UART
+
+      //       //The current pointer data
+
+      //       //Number of times the data was the same previously RLE (Run-Length Encoding)
+      //     }
+      //   }
+      // }
     }
     
   }
