@@ -42,11 +42,12 @@ int main(void) {
   volatile struct dma_bookkeeper* valid_sample;
   uint8_t previous_state = 0b00000000;
   uint8_t* CPU_pointer = (uint8_t *) 0x2000F800;
+  uint32_t read_index = 0;
   
-  uint16_t maximum_run_length = 0;
-  uint16_t current_run_length = 0;
-  uint16_t number_of_raw_samples = 0;
-  uint16_t number_of_grouped_states = 0;
+  uint32_t maximum_run_length = 0;
+  uint32_t current_run_length = 0;
+  uint32_t number_of_raw_samples = 0;
+  uint32_t number_of_grouped_states = 0;
 
   while (1) {
 
@@ -71,22 +72,23 @@ int main(void) {
       
       valid_sample = valid_samples(&dma_logic_analyzer_instance);
 
-      if (CPU_pointer < valid_sample->dma_data_pointer) {
+      while (read_index != valid_sample->completed_count) {
         
-        if (previous_state == *CPU_pointer) {
+        if (previous_state == CPU_pointer[read_index]) {
           current_run_length++;
         } else {
           if (maximum_run_length < current_run_length) {
             maximum_run_length = current_run_length;
-            current_run_length = 0;
           }
-          previous_state = *CPU_pointer;
+          current_run_length = 1;
+          previous_state = CPU_pointer[read_index];
           number_of_grouped_states++;
         }
 
         number_of_raw_samples++;
+        read_index++;
 
-        CPU_pointer++;
+        if (read_index == 65528) read_index = 0;
       }
 
       // if (valid_sample->buffer_wrapping) {
