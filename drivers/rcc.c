@@ -76,6 +76,11 @@ void turn_on_gpioa(void) {
   RCC_AHB1ENR |= (1U << 0);
 }
 
+void turn_on_gpioc(void) {
+  //Turn on GPIOC clock
+  RCC_AHB1ENR |= (1U << 2);
+}
+
 void turn_on_tim1(void) {
   //Turn on TIM1 clock
   RCC_APB2ENR |= (1U << 0);
@@ -85,3 +90,6 @@ void turn_on_dma2_clock(void) {
   RCC_AHB1ENR |= (1U << 22);
 }
 
+void turn_on_usart2_clock(void) {
+  RCC_APB1ENR |= (1 << 17);
+}

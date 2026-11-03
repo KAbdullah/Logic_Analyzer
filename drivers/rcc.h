@@ -31,8 +31,12 @@ void init_rcc_pll(void);
 
 void turn_on_gpioa(void);
 
+void turn_on_gpioc(void);
+
 void turn_on_tim1(void);
 
 void turn_on_dma2_clock(void);
+
+void turn_on_usart2_clock(void);
 
 #endif

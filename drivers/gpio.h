@@ -17,16 +17,32 @@ typedef struct gpio {
 } GPIO_STRUCT;
 
 #define GPIOA ((volatile GPIO_STRUCT*) 0x40020000)
+#define GPIOB ((volatile GPIO_STRUCT *) 0x40020400)
+#define GPIOC ((volatile GPIO_STRUCT *) 0x40020800)
+#define GPIOD ((volatile GPIO_STRUCT *) 0x40020C00)
+#define GPIOE ((volatile GPIO_STRUCT *) 0x40021000)
+#define GPIOF ((volatile GPIO_STRUCT *) 0x40021400)
+#define GPIOG ((volatile GPIO_STRUCT *) 0x40021800)
+#define GPIOH ((volatile GPIO_STRUCT *) 0x40021C00)
 
 typedef struct gpio_container {
   volatile GPIO_STRUCT *address;
   uint32_t moder;
   uint32_t pupdr;
+
+  //For the advanced part
+  uint8_t pin1;
+  uint8_t pin2;
+  uint32_t otyper;
+  uint32_t ospeedr;
+  uint32_t afrl;
 } GPIO_Container;
 
 
 void initialize_gpio(GPIO_Container gpio);
+void initialize_gpio_advanced(GPIO_Container gpio);
 
-extern GPIO_Container GPIOA_Input_PullUp;
+extern GPIO_Container GPIOC_Input_PullUp;
+extern GPIO_Container UsingUSART2;
 
 #endif

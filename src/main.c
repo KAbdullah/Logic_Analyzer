@@ -6,6 +6,7 @@
 #include "../drivers/dma.h"
 #include "../application/LogicAnalyser_Wrapper.h"
 #include "../application/LogicAnalyser_API.h"
+#include "../drivers/uart.h"
 
 typedef enum InputMapping {
   I2C_START_ACQUISITION = 0b0001,
@@ -26,11 +27,14 @@ int main(void) {
   //however this would defeat the purpose of seperating hardware dependent from independant
   init_rcc_pll();
   turn_on_gpioa();
+  turn_on_gpioc();
   turn_on_tim1();
   turn_on_dma2_clock();
+  turn_on_usart2_clock();
   
-  //This basically initialized the GPIOA to act as input for jump cables attached to it that bring it input voltage
-  initialize_gpio(GPIOA_Input_PullUp);
+  //This basically initialized the GPIOC to act as input for jump cables attached to it that bring it input voltage
+  initialize_gpio(GPIOC_Input_PullUp);
+  initialize_gpio_advanced(UsingUSART2);
 
   LogicAnalyser_API dma_logic_analyzer_instance;
   initialize_getting_signals(&dma_logic_analyzer_instance);
@@ -43,11 +47,7 @@ int main(void) {
   uint8_t previous_state = 0b00000000;
   uint8_t* CPU_pointer = (uint8_t *) 0x2000F800;
   uint32_t read_index = 0;
-  
-  uint32_t maximum_run_length = 0;
   uint32_t current_run_length = 0;
-  uint32_t number_of_raw_samples = 0;
-  uint32_t number_of_grouped_states = 0;
 
   while (1) {
 
@@ -77,33 +77,19 @@ int main(void) {
         if (previous_state == CPU_pointer[read_index]) {
           current_run_length++;
         } else {
-          if (maximum_run_length < current_run_length) {
-            maximum_run_length = current_run_length;
-          }
+
+          // Add to the UART buffer over here
+          //1) Send one byte for pin state at Add the two pin states, so for I2C it would be the PA0 and PA1 at the first byte for bits 0 and 1 
+          //2) Then you would send two additonal bytes for RLE based on the the numbers
           current_run_length = 1;
           previous_state = CPU_pointer[read_index];
-          number_of_grouped_states++;
         }
 
-        number_of_raw_samples++;
         read_index++;
 
         if (read_index == 65528) read_index = 0;
       }
 
-      // if (valid_sample->buffer_wrapping) {
-      //   for (int i = 0; i < 65528 - valid_sample->completed_count; i++) {
-      //     current_pointer += i;
-
-      //     if (previous_state != *current_pointer) {
-      //       //Send to UART
-
-      //       //The current pointer data
-
-      //       //Number of times the data was the same previously RLE (Run-Length Encoding)
-      //     }
-      //   }
-      // }
     }
     
   }

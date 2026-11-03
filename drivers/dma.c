@@ -17,8 +17,8 @@ void dma_stream_configuration(volatile DMA_STREAM* dma_stream, volatile DMA_REGI
   general_dma->HIFCR |= (1U << 11);
   general_dma->HIFCR |= (1U << 10);
 
-  //The peripheral address is the GPIOA IDR register
-  dma_stream->SPAR = 0x40020010;
+  //The peripheral address is the GPIOC IDR register
+  dma_stream->SPAR = 0x40020810;
 
   //The data is written to this peice of memory in SRAM1, set Length in Linker to 62KB, so this is bascially SRAM1 base address + 62KB aka 63,488 bytes (0xF800) 
   dma_stream->SM0AR = 0x2000F800;
