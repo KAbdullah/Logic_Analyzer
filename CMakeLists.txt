@@ -24,6 +24,7 @@ target_sources("output.elf" PRIVATE
   drivers/gpio.c
   drivers/rcc.c
   drivers/tim.c
+  drivers/uart.c
 )
 
 target_compile_options("output.elf" PRIVATE  

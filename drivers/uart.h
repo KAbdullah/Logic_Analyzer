@@ -24,7 +24,8 @@ typedef enum {
 #define UART4 ((volatile UART_Struct *) 0x40004C00)
 #define UART5 ((volatile UART_Struct *) 0x40005000)
 
-void USART1_IRQHandler(void);
+void USART2_IRQHandler(void);
 void uart_general_init(volatile UART_Struct *uart_address);
+uint8_t send_uart_data(uint8_t current_state, uint32_t current_state_length);
 
 #endif

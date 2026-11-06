@@ -26,11 +26,9 @@ void uart_general_init(volatile UART_Struct *uart_address) {
 //2KB buffer to brace for state change in cluster
 uint8_t UART_BUFFER[2048];
 
-uint16_t head = 0;
-uint16_t tail = 0;
-uint8_t *current;
-uint8_t buffer_full;
-uint32_t dropped_samples; 
+volatile uint16_t head = 0;
+volatile uint16_t tail = 0;
+uint32_t dropped_samples = 0; 
 uint8_t buffer_overflow;
 
 //For the current state right, we're only extracting the first two bits 
@@ -38,15 +36,15 @@ uint8_t buffer_overflow;
 // 1) If not then we send 3 bytes, 1st byte with first two bits as state, then the next 6 bits contain the current length from 2^3 to 2^8
 // then the second bit values will be counted as 2^9 to 2^16 then the third bit is from 2^17 to 2^24
 uint8_t send_uart_data(uint8_t current_state, uint32_t current_state_length) {
-  uint16_t h = head;
+  volatile uint16_t h = head;
   //If length is 3, then 3 / 2^22 is 0; but 3 + 2^22 - 1 will give one, because maximum it can ever be 2^22 2^22 - 1 / 2^22 = 1
-  uint32_t chunks = (current_state_length + 4194302U) / 4194303; 
+  uint32_t chunks = (current_state_length + 4194302U) / 4194303U; 
 
   //Need to have a way to check that I can actually send data to the buffer
   //Free space = (tail - head + 2047) % 2048
-  if (((tail - head + 2047) % 2048) < (3 * chunks)) { 
+  if (((tail - head + 2047U) % 2048U) < (3 * chunks)) { 
     buffer_overflow = 1;
-    dropped_samples++;
+    dropped_samples += (3 * chunks);
     return 0;
   }  
   
@@ -59,26 +57,34 @@ uint8_t send_uart_data(uint8_t current_state, uint32_t current_state_length) {
 
     
     UART_BUFFER[h] = first_byte;
-    h = (h + 1) % 2048;
+    h = (h + 1) % 2048U;
     UART_BUFFER[h] = second_byte;
-    h = (h + 1) % 2048;
+    h = (h + 1) % 2048U;
     UART_BUFFER[h] = third_byte;
-    h = (h + 1) % 2048;
+    h = (h + 1) % 2048U;
 
     current_state_length -= chunk;
   };
 
   head = h;
   //Enable Interrupt
-  USART2->CR1 |= (1U << 7);
+  USART2->CR1 |= (1U << 7); //Turn on interrupt for TXE bit
   return 1;
 }
 
-void USART1_IRQHandler(void) {
+void USART2_IRQHandler(void) {
+  volatile uint16_t t = tail;
 
+  //tail == head ? buffer empty; tail - 1 == head ? buffer full;
+  if (((head - tail + 2048U) % 2048U) == 0) {
+    //Turn off interrupt
+    USART2->CR1 &= ~(1U << 7); //Turn off interrupt for TXE bit
+    return;
+  }
 
   //Write the data to send in the UART DR (which clears the TXE bit). - Will probably be moved to interrupt
+  USART2->DR = UART_BUFFER[tail];
+  t = (t + 1) % 2048U;
 
-  //After writing the last data, wait until TC=1. this indicates the transmission of the last frame is complete. - Will probably be moved to interrupt
-
+  tail = t;
 }

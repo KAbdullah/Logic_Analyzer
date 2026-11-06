@@ -20,8 +20,10 @@ void initialize_getting_signals(LogicAnalyser_API *api);
 int main(void) {
 
   __asm__("CPSIE i");
-  //Turn on interrupt for DMA_Stream5
+  //Turn on interrupt for DMA_Stream5 and USART2
   *((volatile uint32_t*) 0xE000E108) |= (1U << 4);
+  *((volatile uint32_t*) 0xE000E104) |= (1U << 6);
+
 
   //I have these here and that's why I'm importing all the driver.h files
   //however this would defeat the purpose of seperating hardware dependent from independant
@@ -35,6 +37,7 @@ int main(void) {
   //This basically initialized the GPIOC to act as input for jump cables attached to it that bring it input voltage
   initialize_gpio(GPIOC_Input_PullUp);
   initialize_gpio_advanced(UsingUSART2);
+  uart_general_init(USART2);
 
   LogicAnalyser_API dma_logic_analyzer_instance;
   initialize_getting_signals(&dma_logic_analyzer_instance);
@@ -78,9 +81,9 @@ int main(void) {
           current_run_length++;
         } else {
 
-          // Add to the UART buffer over here
-          //1) Send one byte for pin state at Add the two pin states, so for I2C it would be the PA0 and PA1 at the first byte for bits 0 and 1 
-          //2) Then you would send two additonal bytes for RLE based on the the numbers
+          //Send pin State data and RLE to UART
+          send_uart_data(previous_state, current_run_length);
+
           current_run_length = 1;
           previous_state = CPU_pointer[read_index];
         }
