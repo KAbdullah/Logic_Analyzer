@@ -16,7 +16,7 @@ void uart_general_init(volatile UART_Struct *uart_address) {
   uart_address->CR3 &= ~(1U << 7);
 
   //Select Desired Buad rate of 921.6 KBps
-  uart_address->BRR = (12U << 4) | (2U << 0); 
+  uart_address->BRR = (3U << 4) | (1U << 0); 
 
   //Set the TE bit in UART CR1 to send and idle frame as first transmission
   uart_address->CR1 |= (1 << 3);
@@ -37,8 +37,8 @@ uint8_t buffer_overflow;
 // then the second bit values will be counted as 2^9 to 2^16 then the third bit is from 2^17 to 2^24
 uint8_t send_uart_data(uint8_t current_state, uint32_t current_state_length) {
   volatile uint16_t h = head;
-  //If length is 3, then 3 / 2^22 is 0; but 3 + 2^22 - 1 will give one, because maximum it can ever be 2^22 2^22 - 1 / 2^22 = 1
-  uint32_t chunks = (current_state_length + 4194302U) / 4194303U; 
+  //If length is 3, then 3 / 2^19 is 0; but 3 + 2^19 - 1 will give one, because maximum it can ever be 2^19 + 2^19 - 1 / 2^19 = 1
+  uint32_t chunks = (current_state_length + 524286U) / 524287U; 
 
   //Need to have a way to check that I can actually send data to the buffer
   //Free space = (tail - head + 2047) % 2048
@@ -50,10 +50,11 @@ uint8_t send_uart_data(uint8_t current_state, uint32_t current_state_length) {
   
   //Add data to the buffer
   while (current_state_length > 0) {
-    uint32_t chunk = (current_state_length > 4194303U) ? 4194303U : current_state_length;
-    uint8_t first_byte = (current_state & (3U << 0)) | ((chunk << 2) &  0b11111100);
-    uint8_t second_byte = (chunk >> 6) & 0b11111111;
-    uint8_t third_byte = (chunk >> 14) & 0b11111111;
+    uint32_t chunk = (current_state_length > 524287U) ? 524287U : current_state_length;
+    //First byte is broken like this: first 2 bits is state, then next 5 bits is count, then 8th bit is head flag
+    uint8_t first_byte = (current_state & (3U << 0)) | ((chunk << 2) &  0b01111100) | ((1U << 7));
+    uint8_t second_byte = (chunk >> 5) & 0b01111111;
+    uint8_t third_byte = (chunk >> 12) & 0b01111111;
 
     
     UART_BUFFER[h] = first_byte;
