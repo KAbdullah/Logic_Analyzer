@@ -13,3 +13,11 @@ int stop_signals(LogicAnalyser_API *api) {
 volatile struct dma_bookkeeper* valid_samples(LogicAnalyser_API *api) {
   return api->bookeeping(api->context);
 }
+
+uint8_t send_uart_data(LogicAnalyser_API *api, uint8_t state, uint32_t counter) {
+  return api->send_uart_data(state, counter);
+}
+
+uint32_t receive_command(LogicAnalyser_API *api) {
+  return api->receive_uart_data(api->context);
+}

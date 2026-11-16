@@ -2,6 +2,7 @@
 
 #include "../drivers/tim.h"
 #include "../drivers/dma.h"
+#include "../drivers/uart.h"
 #include "LogicAnalyser_API.h"
 
 volatile struct dma_bookkeeper BOOK = {
@@ -68,7 +69,7 @@ static int dma_stop_acquisition(struct LogicAnalyserConfig *handle) {
   }
 
   if (!(is_dma_enabled(handle->dma_stream))) {
-    current_capture_state = CAPTURED;
+    current_capture_state = IDLE;
   } else {
     return 0;
   }
@@ -82,9 +83,19 @@ static volatile struct dma_bookkeeper* dma_bookkeeping(struct LogicAnalyserConfi
   return handle->dma_bookkeeping;
 }
 
+uint8_t send_uart2_data(uint8_t state, uint32_t counter) {
+  return send_usart2_data(state, counter);
+}
+
+uint32_t receive_uart2_commands() {
+  return receive_usart2_commands();
+}
+
 void initialize_getting_signals(LogicAnalyser_API *api) {
   api->context = &dma_configuration_2;
   api->start_acquisition = dma_start_acquisition;
   api->stop_acquisition = dma_stop_acquisition;
   api->bookeeping = dma_bookkeeping;
+  api->send_uart_data = send_uart2_data;
+  api->receive_uart_data = receive_uart2_commands;
 }

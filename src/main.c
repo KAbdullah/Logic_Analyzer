@@ -42,17 +42,21 @@ int main(void) {
   LogicAnalyser_API dma_logic_analyzer_instance;
   initialize_getting_signals(&dma_logic_analyzer_instance);
 
-  uint8_t userInput = 1;
+  volatile uint8_t userInput;
   uint8_t dma_acquisition_started = 0;
   uint8_t dma_acquisition_stopped = 1;
 
-  volatile struct dma_bookkeeper* valid_sample;
-  uint8_t previous_state = 0b11; //That's the ideal state, stop false creation of of state
-  uint8_t* CPU_pointer = (uint8_t *) 0x2000F800;
-  uint32_t read_index = 0;
+  uint8_t previous_state = 0b11;
   uint32_t current_run_length = 0;
 
+  volatile struct dma_bookkeeper* valid_sample;
+  uint8_t* CPU_pointer = (uint8_t *) 0x2000F800;
+  uint32_t read_index = 0;
+
   while (1) {
+
+    //Accept UART data coming from the RX line here
+    userInput = receive_command(&dma_logic_analyzer_instance);
 
     if (userInput == I2C_START_ACQUISITION && dma_acquisition_stopped) {
       dma_acquisition_started = get_signals(&dma_logic_analyzer_instance);
@@ -82,7 +86,7 @@ int main(void) {
         } else {
 
           //Send pin State data and RLE to UART
-          send_uart_data(previous_state, current_run_length);
+          send_uart_data(&dma_logic_analyzer_instance, previous_state, current_run_length);
 
           current_run_length = 1;
           previous_state = (CPU_pointer[read_index] & (0b11 << 0));

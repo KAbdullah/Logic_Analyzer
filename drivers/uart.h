@@ -13,12 +13,6 @@ typedef struct {
   uint32_t GTPR;
 } UART_Struct;
 
-typedef enum {
-  IDLE,
-  RECEIVING_DATA,
-  DATA_RECEPTION_COMPLETE
-} uart_states_t;
-
 #define USART1 ((volatile UART_Struct *) 0x40011400)
 #define USART2 ((volatile UART_Struct *) 0x40004400)
 #define UART4 ((volatile UART_Struct *) 0x40004C00)
@@ -26,6 +20,7 @@ typedef enum {
 
 void USART2_IRQHandler(void);
 void uart_general_init(volatile UART_Struct *uart_address);
-uint8_t send_uart_data(uint8_t current_state, uint32_t current_state_length);
+uint8_t send_usart2_data(uint8_t current_state, uint32_t current_state_length);
+uint32_t receive_usart2_commands();
 
 #endif

@@ -107,6 +107,19 @@ class I2CVisualizer(QMainWindow):
             self.clear_graph
         )
 
+        # Acquisition control commands sent to the STM32 over USART2.
+        self.start_button = QPushButton("Start")
+        self.start_button.setEnabled(False)
+        self.start_button.clicked.connect(
+            lambda: self.send_command(0b0001)
+        )
+
+        self.stop_button = QPushButton("Stop")
+        self.stop_button.setEnabled(False)
+        self.stop_button.clicked.connect(
+            lambda: self.send_command(0b0010)
+        )
+
         controls.addWidget(QLabel("Serial port:"))
         controls.addWidget(self.port_combo)
 
@@ -115,6 +128,8 @@ class I2CVisualizer(QMainWindow):
 
         controls.addWidget(self.connect_button)
         controls.addWidget(self.clear_button)
+        controls.addWidget(self.start_button)
+        controls.addWidget(self.stop_button)
 
         layout.addLayout(controls)
 
@@ -245,6 +260,8 @@ class I2CVisualizer(QMainWindow):
             self.rx_buffer.clear()
 
             self.connect_button.setText("Disconnect")
+            self.start_button.setEnabled(True)
+            self.stop_button.setEnabled(True)
 
             self.status_label.setText(
                 f"Connected: {self.port_name}"
@@ -265,7 +282,36 @@ class I2CVisualizer(QMainWindow):
             self.serial_port = None
 
         self.connect_button.setText("Connect")
+        self.start_button.setEnabled(False)
+        self.stop_button.setEnabled(False)
         self.status_label.setText("Disconnected")
+
+    def send_command(self, command):
+        """Send one raw command byte to the STM32 over the serial link."""
+
+        if self.serial_port is None or not self.serial_port.is_open:
+            self.status_label.setText("Not connected")
+            return
+
+        try:
+            # Send exactly one byte: 0x01 for START, 0x02 for STOP.
+            self.serial_port.write(bytes([command]))
+            self.serial_port.flush()
+
+            command_name = {
+                0b0001: "START",
+                0b0010: "STOP",
+            }.get(command, f"UNKNOWN (0x{command:02X})")
+
+            self.status_label.setText(
+                f"Connected: {self.port_name} | Sent {command_name}"
+            )
+
+        except serial.SerialException as error:
+            self.status_label.setText(
+                f"Serial write error: {error}"
+            )
+            self.disconnect_serial()
 
     # --------------------------------------------------
     # RLE decoder

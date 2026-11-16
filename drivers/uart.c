@@ -20,6 +20,7 @@ void uart_general_init(volatile UART_Struct *uart_address) {
 
   //Set the TE bit in UART CR1 to send and idle frame as first transmission
   uart_address->CR1 |= (1 << 3);
+  uart_address->CR1 |= (1 << 2); //RE enable
 
 }
 
@@ -35,7 +36,7 @@ uint8_t buffer_overflow;
 //For current state length we check if it's bigger than 2^22 - 1,
 // 1) If not then we send 3 bytes, 1st byte with first two bits as state, then the next 6 bits contain the current length from 2^3 to 2^8
 // then the second bit values will be counted as 2^9 to 2^16 then the third bit is from 2^17 to 2^24
-uint8_t send_uart_data(uint8_t current_state, uint32_t current_state_length) {
+uint8_t send_usart2_data(uint8_t current_state, uint32_t current_state_length) {
   volatile uint16_t h = head;
   //If length is 3, then 3 / 2^19 is 0; but 3 + 2^19 - 1 will give one, because maximum it can ever be 2^19 + 2^19 - 1 / 2^19 = 1
   uint32_t chunks = (current_state_length + 524286U) / 524287U; 
@@ -88,4 +89,8 @@ void USART2_IRQHandler(void) {
   t = (t + 1) % 2048U;
 
   tail = t;
+}
+
+uint32_t receive_usart2_commands() {
+  return USART2->DR;
 }

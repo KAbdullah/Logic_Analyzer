@@ -13,6 +13,8 @@ typedef struct LogicAnalyser_API {
   int (*start_acquisition) (struct LogicAnalyserConfig *context);
   int (*stop_acquisition) (struct LogicAnalyserConfig *context);
   volatile struct dma_bookkeeper*  (*bookeeping) (struct LogicAnalyserConfig *context);
+  uint8_t (*send_uart_data) (uint8_t state, uint32_t counter);
+  uint32_t (*receive_uart_data) (struct LogicAnalyserConfig *context);
 
 } LogicAnalyser_API;
 
