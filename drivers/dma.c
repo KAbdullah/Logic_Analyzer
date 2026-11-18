@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "dma.h"
+#include "../Error/errors.h"
 
 //This needs to be on the outside so that we can only call the above function if EN bit is 0
 //If the bit is on if we do (1 << 5) for example, the value would be 32, meaning on, if it's off then it would be 0, therefore no comparator is still necessary
@@ -70,6 +71,9 @@ void dma_stream_configuration(volatile DMA_STREAM* dma_stream, volatile DMA_REGI
 
   //Turn on Transfer complete interrupt enable only on the first one, then disable later in interrupt
   dma_stream->SCR |= (1U << 4);
+
+  //Turn on Transfer Error interrupt
+  dma_stream->SCR |= (1U << 1);
 }
 
 void turn_on_stream5(volatile DMA_STREAM* dma_stream, volatile DMA_REGISTERS* general_dma) {
@@ -106,9 +110,12 @@ void DMA2_Stream5_IRQHandler(void) {
     DMASTREAM5->SCR &= ~(1U << 4);
   }
 
+  if (DMA2->HISR & (1U << 9)) {
+    handle_transfer_error();
+  }
+
   return;
 }
-
 
 void count_samples(volatile DMA_STREAM* dma_stream, volatile struct dma_bookkeeper* book_keeping) {
 

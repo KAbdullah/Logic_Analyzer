@@ -37,6 +37,10 @@ class I2CVisualizer(QMainWindow):
         self.serial_port = None
         self.rx_buffer = bytearray()
 
+        # GUI-side acquisition state. The STM32 protocol currently sends
+        # transfer errors, but does not send START/STOP acknowledgements.
+        self.acquisition_running = False
+
         self.total_samples = 0
         self.total_records = 0
         self.discarded_bytes = 0
@@ -120,6 +124,29 @@ class I2CVisualizer(QMainWindow):
             lambda: self.send_command(0b0010)
         )
 
+        # Make the current acquisition state visually obvious.
+        self.error_banner = QLabel()
+        self.error_banner.setVisible(False)
+        self.error_banner.setWordWrap(True)
+        self.error_banner.setAlignment(
+            pg.QtCore.Qt.AlignmentFlag.AlignCenter
+        )
+        self.error_banner.setStyleSheet(
+            """
+            QLabel {
+                background-color: #7A1010;
+                color: white;
+                border: 2px solid #FF5555;
+                border-radius: 8px;
+                padding: 16px;
+                font-size: 18px;
+                font-weight: bold;
+            }
+            """
+        )
+
+        self.update_acquisition_buttons()
+
         controls.addWidget(QLabel("Serial port:"))
         controls.addWidget(self.port_combo)
 
@@ -141,6 +168,7 @@ class I2CVisualizer(QMainWindow):
         )
 
         layout.addWidget(self.status_label)
+        layout.addWidget(self.error_banner)
         layout.addWidget(self.statistics_label)
 
         # Waveform plot
@@ -260,8 +288,9 @@ class I2CVisualizer(QMainWindow):
             self.rx_buffer.clear()
 
             self.connect_button.setText("Disconnect")
-            self.start_button.setEnabled(True)
-            self.stop_button.setEnabled(True)
+            self.acquisition_running = False
+            self.error_banner.setVisible(False)
+            self.update_acquisition_buttons()
 
             self.status_label.setText(
                 f"Connected: {self.port_name}"
@@ -282,9 +311,64 @@ class I2CVisualizer(QMainWindow):
             self.serial_port = None
 
         self.connect_button.setText("Connect")
-        self.start_button.setEnabled(False)
-        self.stop_button.setEnabled(False)
+        self.acquisition_running = False
+        self.error_banner.setVisible(False)
+        self.update_acquisition_buttons()
         self.status_label.setText("Disconnected")
+
+    def update_acquisition_buttons(self):
+        """Show which acquisition action is currently available/active."""
+
+        connected = (
+            self.serial_port is not None
+            and self.serial_port.is_open
+        )
+
+        self.start_button.setEnabled(
+            connected and not self.acquisition_running
+        )
+        self.stop_button.setEnabled(
+            connected and self.acquisition_running
+        )
+
+        if self.acquisition_running:
+            self.start_button.setStyleSheet(
+                "QPushButton { background-color: #333333; color: #999999; "
+                "padding: 7px 16px; }"
+            )
+            self.stop_button.setStyleSheet(
+                "QPushButton { background-color: #B3261E; color: white; "
+                "font-weight: bold; padding: 7px 16px; "
+                "border: 2px solid #FF7770; }"
+            )
+        else:
+            self.start_button.setStyleSheet(
+                "QPushButton { background-color: #16803C; color: white; "
+                "font-weight: bold; padding: 7px 16px; "
+                "border: 2px solid #55D98A; }"
+            )
+            self.stop_button.setStyleSheet(
+                "QPushButton { background-color: #333333; color: #999999; "
+                "padding: 7px 16px; }"
+            )
+
+    def show_transfer_error(self):
+        """Display a prominent DMA transfer error and offer a restart."""
+
+        self.acquisition_running = False
+        self.update_acquisition_buttons()
+
+        self.error_banner.setText(
+            "⚠ DMA TRANSFER ERROR\n"
+            "The STM32 acquisition stopped because a DMA transfer error "
+            "was reported. Press START "
+            "to try the acquisition again."
+        )
+        self.error_banner.setVisible(True)
+
+        self.status_label.setText(
+            "Acquisition error — restart required"
+        )
 
     def send_command(self, command):
         """Send one raw command byte to the STM32 over the serial link."""
@@ -303,9 +387,23 @@ class I2CVisualizer(QMainWindow):
                 0b0010: "STOP",
             }.get(command, f"UNKNOWN (0x{command:02X})")
 
-            self.status_label.setText(
-                f"Connected: {self.port_name} | Sent {command_name}"
-            )
+            if command == 0b0001:
+                self.acquisition_running = True
+                self.error_banner.setVisible(False)
+                self.status_label.setText(
+                    f"Connected: {self.port_name} | Acquisition running"
+                )
+            elif command == 0b0010:
+                self.acquisition_running = False
+                self.status_label.setText(
+                    f"Connected: {self.port_name} | Acquisition stopped"
+                )
+            else:
+                self.status_label.setText(
+                    f"Connected: {self.port_name} | Sent {command_name}"
+                )
+
+            self.update_acquisition_buttons()
 
         except serial.SerialException as error:
             self.status_label.setText(
@@ -394,6 +492,14 @@ class I2CVisualizer(QMainWindow):
                 )
 
                 if count == 0:
+                    continue
+
+                # Reserved control record: DMA Transfer Error.
+                # state=3 (binary 11), count=101.
+                # Do not send this record to the waveform or I2C decoder.
+                if state == 3 and count == 101:
+                    self.show_transfer_error()
+                    print("ERROR: DMA Transfer Error received from STM32")
                     continue
 
                 self.process_run(state, count)
@@ -760,6 +866,7 @@ class I2CVisualizer(QMainWindow):
         self.i2c_output.clear()
 
         self.rx_buffer.clear()
+        self.error_banner.setVisible(False)
 
         self.scl_x.clear()
         self.scl_y.clear()

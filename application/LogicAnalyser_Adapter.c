@@ -41,6 +41,10 @@ static int dma_start_acquisition(struct LogicAnalyserConfig *handle) {
   }
 
   if (current_capture_state == IDLE) {
+
+    //Turn on Transfer Error interrupt, because I turn it off in handle transfer error
+    DMASTREAM5->SCR |= (1U << 1);
+
     turn_on_stream5(handle->dma_stream, handle->general_dma);
     current_capture_state = STARTING_DMA;
   }

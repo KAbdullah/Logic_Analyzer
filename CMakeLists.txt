@@ -25,6 +25,7 @@ target_sources("output.elf" PRIVATE
   drivers/rcc.c
   drivers/tim.c
   drivers/uart.c
+  Error/errors.c
 )
 
 target_compile_options("output.elf" PRIVATE  

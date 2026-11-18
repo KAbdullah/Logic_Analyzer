@@ -92,5 +92,8 @@ void USART2_IRQHandler(void) {
 }
 
 uint32_t receive_usart2_commands() {
-  return USART2->DR;
+  if (USART2->SR & (1U << 5)) {
+    return USART2->DR;
+  }
+  return 0;
 }

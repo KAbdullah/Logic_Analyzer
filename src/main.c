@@ -7,8 +7,9 @@
 #include "../application/LogicAnalyser_Wrapper.h"
 #include "../application/LogicAnalyser_API.h"
 #include "../drivers/uart.h"
+#include "../Error/errors.h"
 
-typedef enum InputMapping {
+typedef enum InputMapping { 
   I2C_START_ACQUISITION = 0b0001,
   I2C_STOP_ACQUISITION = 0b0010,
   INVALID = 0b1111
@@ -58,6 +59,14 @@ int main(void) {
     //Accept UART data coming from the RX line here
     userInput = receive_command(&dma_logic_analyzer_instance);
 
+    if (current_error_state == DMA_TRANSFER_ERROR) {
+      userInput = I2C_STOP_ACQUISITION;
+      send_uart_data(&dma_logic_analyzer_instance, 3U, current_error_state);
+      if (!dma_acquisition_started) {
+        current_error_state = ERROR_FREE;
+      }
+    }
+
     if (userInput == I2C_START_ACQUISITION && dma_acquisition_stopped) {
       dma_acquisition_started = get_signals(&dma_logic_analyzer_instance);
       if (dma_acquisition_started) {
@@ -75,7 +84,7 @@ int main(void) {
 
     //Test taking place
 
-    if (userInput == I2C_STOP_ACQUISITION || userInput == I2C_START_ACQUISITION) {
+    if (dma_acquisition_started) {
       
       valid_sample = valid_samples(&dma_logic_analyzer_instance);
 

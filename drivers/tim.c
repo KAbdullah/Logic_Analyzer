@@ -33,6 +33,6 @@ void start_tim1(void) {
 }
 
 void stop_tim1(void) {
-  //Start the timer
+  //Stop the timer
   TIM1->CR1 &= ~(1U << 0);
 }
