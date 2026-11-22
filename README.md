@@ -40,3 +40,6 @@
 > ```
 > *(You can get this number by running `usbipd list`)*
 
+6. The picture below demonstrates how to attached the jumper cables, where PIN 0 and PIN 1 are your voltage sniffers and the GND pin is so your logic analyzer and the target board share the same commond ground. 
+
+![Jumper cable wiring for PC0, PC1, and GND](https://drive.google.com/file/d/1z2SzqBMnmm02DEs8V6ySXzsg-qZ_OmNv/view?usp=sharing)
