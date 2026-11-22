@@ -1,4 +1,3 @@
-```markdown
 # 2-Pin Logic Analyzer and I2C Protocol Decoder
 
 ## What you need to get it working
@@ -40,4 +39,4 @@
 > usbipd attach --wsl --busid <BUSID>
 > ```
 > *(You can get this number by running `usbipd list`)*
-```
+
