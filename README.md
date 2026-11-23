@@ -15,10 +15,11 @@ A bare-metal 2-channel logic analyzer and I2C protocol decoder built from scratc
 
 ## Key Technical Highlights
 
-* **Run-Length Encoding (RLE):** [Add how RLE compresses repeated signal states/samples and why you chose it.]
-* **UART Buffer & Sizing Calculation:** [Add how the UART buffer handles data spikes and how you calculated the buffer size.]
-* **Non-Blocking State Transitions:** [Add how enforcing state transitions avoids blocking/waiting steps so other tasks continue progressing.]
-* **Error Handling:** [Add one specific error case and how your firmware/system detects and handles it.]
+* **Run-Length Encoding (RLE):** Added RLE after noticing that some states lasted for multiple reads, reaching a maximum of almost 2 million samples. Instead of sending every state as a byte, a header was sent where bit0 and bit1 was the current state, bit2 - bit6 was the count and bit7 was one to indicate a header byte. Then the next two bytes were basically a continuation of the count where 8th bit was always zero to indicate continuation. If a state's count was longer than the 3 bytes the RLE could handle, it would simply resend the state along with the remaining count. 
+* **UART Circular Buffer:** Added a circular buffer for transmitting so rapid back-to-back state changes doesn't cause corrupted or lost bytes during bursts. A producer pointer advances as encoded data gets added to the buffer while a UART2 interrupt shifts bytes out asynchronously while also incrementing it's own consumer pointer in the buffer.
+* **Non-Blocking State Transitions:** Ensured that this project unlike the [SGP30-Sensor Project](https://github.com/KAbdullah/Bare-Metal-I2C-Communication-with-SGP30-Sensor) used non-blocking state transitions to complete its tasks and not idly wait until a transaction was completed by using timers. If a task weren't completed then the state wouldn't advance, skipping tasks that relied on the advanced state and completing other tasks that didn't rely on the advanced state and/or the current state for that matter.  
+* **DMA Transfer & Timers:** Used DMA to transfer state data from the GPIO pins to the DMA buffer, avoiding using interrupts, so the CPU can handle encoding the data and sending it out via UART2 instead of spending every nanosecond to read pin voltage data. Used a timer (TIM1) to enable a DMA request every 2MHZ.
+* **Error Handling:** Due to time constraints, Error handling was only done for DMA transfers (TEIE) as shown [here](https://youtu.be/5pgzcUC6hbQ), because a bad DMA state can corrupt capture memory immediately.
 
 ## What you need to get it working
 
@@ -67,6 +68,7 @@ A bare-metal 2-channel logic analyzer and I2C protocol decoder built from scratc
 
 ## Future Improvements
 
-* [Add planned improvement 1, e.g., support additional protocols such as SPI or UART.]
-* [Add planned improvement 2, e.g., add trigger conditions or increase sample rate/buffer depth.]
-* [Add planned improvement 3, e.g., refine error handling or host visualization features.]
+- **Expanded Error Handling:** Add additional error handling for Transmit ring buffer overflows, DMA FIFO errors (FEIF), detecting UART overrun errors, etc...
+- **User-Configurable Options:** Allow for more user configurable options such as sampling rate selection, # of pins, more protocol decoding.
+- **Isolated Logic Testing:** Develop better testing by creating a separate testing module to test higher level logic such as state transitions. (Will try this for my Game Boy project)
+- **Architectural Separation & Modularity:** Better architectural separation and modularity so more user configurable options are available along with better testability for high level logic.

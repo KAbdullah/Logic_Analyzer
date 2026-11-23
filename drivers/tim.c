@@ -2,7 +2,7 @@
 #include "tim.h"
 #include "../drivers/gpio.h"
 
-//Timer will be generate a DMA interrupt every 2Hz, very safe for DMA to accomplish its writes on the RAM
+//Timer will be generate a DMA interrupt every 2MHz, very safe for DMA to accomplish its writes on the RAM
 
 void configuration_of_tim1() {
 
